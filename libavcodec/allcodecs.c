@@ -184,6 +184,7 @@ extern AVCodec ff_mdec_decoder;
 extern AVCodec ff_mimic_decoder;
 extern AVCodec ff_mjpeg_encoder;
 extern AVCodec ff_mjpeg_decoder;
+extern AVCodec ff_mjpeg_mmal_decoder;
 extern AVCodec ff_mjpegb_decoder;
 extern AVCodec ff_mmvideo_decoder;
 extern AVCodec ff_motionpixels_decoder;
