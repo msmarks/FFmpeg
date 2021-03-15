@@ -675,6 +675,7 @@ static int ffmmal_read_frame(AVCodecContext *avctx, AVFrame *frame, int *got_fra
 {
     MMALDecodeContext *ctx = avctx->priv_data;
     MMAL_BUFFER_HEADER_T *buffer = NULL;
+    MMAL_BUFFER_HEADER_T *buffer2 = NULL;
     MMAL_STATUS_T status = 0;
     int ret = 0;
 
@@ -715,8 +716,12 @@ static int ffmmal_read_frame(AVCodecContext *avctx, AVFrame *frame, int *got_fra
         if (eos) {
             if (ctx->eos_sent) {
               ctx->eos_received = 1;
+              goto done;
             }
-            goto done;
+            
+            mmal_buffer_header_release(buffer);
+            continue;
+        
         }
 
         if (buffer->cmd == MMAL_EVENT_FORMAT_CHANGED) {
@@ -760,14 +765,26 @@ static int ffmmal_read_frame(AVCodecContext *avctx, AVFrame *frame, int *got_fra
 
         ctx->frames_output++;
 
-        if ((ret = ffmal_copy_frame(avctx, frame, buffer)) < 0)
-            goto done;
+        //if ((ret = ffmal_copy_frame(avctx, frame, buffer)) < 0)
+        //    goto done;
 
         *got_frame = 1;
-        break;
+
+        if(buffer2) {
+            mmal_buffer_header_release(buffer2);
+        }
+        buffer2 = buffer;
+        buffer = NULL;
+        // continue;
+        // break;
     }
 
 done:
+    if(*got_frame) {
+        ret = ffmal_copy_frame(avctx, frame, buffer2);
+    }
+    if (buffer2)
+        mmal_buffer_header_release(buffer2);
     if (buffer)
         mmal_buffer_header_release(buffer);
     if (status && ret >= 0)
